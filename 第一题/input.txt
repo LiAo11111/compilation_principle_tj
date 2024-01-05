@@ -1,14 +1,13 @@
 PROGRAM add
-CONST i := 2 , j := 9;
+CONST i:=2  , j :=3;
 VAR x,y;
 BEGIN
     x:=1;
     y:=2;
-    WHILE x<5 DO x:=x+1;
+    WHILE x<>5 DO x:=x+1;
     WHILE y<j DO 
         BEGIN
-            WHILE x>y DO y:=y*i
+           y:=y+1
         END;
-    IF y>0 THEN y:=y-1;
-    y:=y+x
-END
+    IF y>0 THEN y:=y-1
+   END

@@ -1,0 +1,15 @@
+PROGRAM add
+CONST i:=2  , j :=3;
+VAR x,y;
+BEGIN
+x:=1;
+y:=2;
+IF y>0 THEN
+BEGIN
+WHILE x<>5 DO x:=x+1
+END;
+WHILE y<j DO 
+BEGIN
+y:=y+1
+END
+END

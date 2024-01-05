@@ -23,7 +23,7 @@ bool check_ident_CorV(string st)
 {
 	for(int i=1;i<=ident_num;i++)
 		if(st==ident_string[i])
-			return ident_type;
+			return ident_type[i];
 	return false;
 }
 // 定义单词类型枚举
@@ -61,7 +61,7 @@ enum Symbol {
     becomes, // ":="
     leq, // "<="
     geq, // ">="
-    neq,// "#"
+    neq,// "<>"
     error//无效字符
 
 };
@@ -83,7 +83,7 @@ const char* symbol_names[] = {
     "becomes", // ":="
     "leq", // "<="
     "geq", // ">="
-    "neq" ,// "#"
+    "neq" ,// "<>"
     "error"//无效字符
 
 };
@@ -176,13 +176,15 @@ Token getNextToken(ifstream& ifs) {
         case '*': token.symSignal = times; token.value = '*'; break;
         case '/': token.symSignal = slash; token.value = '/'; break;
         case '=': token.symSignal = eql; token.value = '='; break;
-        case '#': token.symSignal = neq; token.value = '#'; break;
         case '<': {
             if (ifs.get(c) && c == '=') {
                 token.symSignal = leq;
                 token.value = "<=";
             }
-
+			else if ( c == '>') {//if语句已经读取了一个字符，这里在条件中不能再读取字符了
+				token.symSignal = neq;
+				token.value = "<>";
+			}
             else {
                 ifs.putback(c);
                 token.symSignal = lss;
@@ -249,16 +251,17 @@ void print_Intermediatecode()
 }
 //函数定义
 Token token;
-void PROGRAM_HEAD();
-void BLOCK();
-void CONST_Process();
-void CONST();
-void VAR();
-void STATE();
-void EXP();
-void TERM();
-void FACTOR();
-void CEXP();
+void PROGRAM_HEAD();//程序首部
+void BLOCK();//分程序
+void CONST_Process();//常量说明
+void CONST();//常量定义
+void VAR();//变量说明
+void STATE();//语句
+void EXP();//表达式
+void TERM();//项
+void FACTOR();//因子
+void CEXP();//条件
+
 //<程序>→<程序首部> <分程序>
 void PROGRAM()
 {
@@ -286,21 +289,21 @@ void BLOCK()
 		CONST_Process();
 	if(token.type==keyword&&token.value=="VAR")
 		VAR();
-		
-	STATE();
+	if((token.type== ident)|| (token.type == keyword) && (token.value == "WHILE"|| token.value == "IF" || token.value == "BEGIN"))
+		STATE();
 }
-//<常量说明>→CONST <常量定义>
+//<常量说明>→CONST <常量定义>{，<常量定义>} 
 void CONST_Process()
 {
 	CONST();
 	while((token=getNextToken(ifs)).type==symbol)
 	{
-		if(symbol_names[token.symSignal]=="semicolon")
+		if(symbol_names[token.symSignal]=="semicolon")//如果是分号，这句结束
 		{
 			token=getNextToken(ifs);
 			break;
 		}
-		//默认为逗号，不再处理别的错误了，不然太麻烦
+		//默认为逗号，继续常量定义
 		else
 			CONST();
 	}
@@ -323,7 +326,7 @@ void CONST()
 		token=getNextToken(ifs);
 		if(token.type==symbol&&symbol_names[token.symSignal]=="becomes")
 		{
-			token=getNextToken(ifs);//之后便不考虑错误了，不然太复杂了
+			token=getNextToken(ifs);
 			address++;
 			Intermidiate_Code[address][1]=":=";
 			Intermidiate_Code[address][2]=token.value;
@@ -361,7 +364,6 @@ void VAR()
 			ofs<<"Error:redefinition of ident "<<token.value<<endl;
 		else
 			ident_string[++ident_num]=token.value,ident_type[ident_num]=true;
-		//假定后面的一定会是符号，只算，和；
 		token=getNextToken(ifs);
 		if(token.type==symbol)
 		{
@@ -453,80 +455,92 @@ void STATE()
 	else if(token.type==keyword&&token.value=="BEGIN")
 	{
 		token=getNextToken(ifs);
-		STATE();
-		//语句后面一定是符号，其他情况不搞了
-		while(token.type==symbol)
+		if (token.value == "END")//空语句
 		{
-			if(symbol_names[token.symSignal]!="semicolon")
-				ofs<<"Error:expected semicolon"<<endl;
-			token=getNextToken(ifs);
-			STATE();
+			token = getNextToken(ifs);
 		}
-		//假设出来的一定是END，其它报错后直接按END处理
-		if(token.value!="END")
-			ofs<<"Error:expected END"<<endl;
-		token=getNextToken(ifs);
+		else//不是空语句
+		{
+			STATE();
+			while (token.type == symbol)
+			{
+				if (symbol_names[token.symSignal] != "semicolon")
+					ofs << "Error:expected semicolon" << endl;
+				token = getNextToken(ifs);
+				STATE();
+			}
+			//其它报错后直接按END处理
+			if (token.value != "END")
+				ofs << "Error:expected END" << endl;
+			token = getNextToken(ifs);
+		}
+		
 	}
-	//有错误也不处理了，仅进行报错
+	//有错误进行报错
 	else
 		ofs<<"Error:expected legal statement"<<endl;
 }
 //<表达式>→[+|-]项 | <表达式> <加法运算符> <项>
 //有左循环，直接改写成  <表达式>→[+|-]项 | <项> [<加法运算符> <项>]
-//后续就不进行错误处理了，太麻烦了根本想不过来
+//后续就不进行错误处理
 void EXP()
 {
-	bool Polarity=true;
-	// */-处理
-	if(token.type==symbol&&(symbol_names[token.symSignal]=="Plus"||symbol_names[token.symSignal]=="Minus"))
+	bool Polarity = true;
+	char temp = token.symSignal;
+	// +/-处理
+	if (token.type == symbol && (symbol_names[token.symSignal] == "Plus" || symbol_names[token.symSignal] == "Minus"))
 	{
-		Polarity=false;
-		token=getNextToken(ifs);
+		Polarity = false;
+		token = getNextToken(ifs);
 	}
 	TERM();
-	// */-处理
-	if(!Polarity)
+	// +/-处理
+	if (!Polarity)
 	{
 		middle_num++;
-		string middle_ident_new="T"+to_string(middle_num);
+		string middle_ident_new = "T" + to_string(middle_num);
 		address++;
-		Intermidiate_Code[address][1]="NEG";
-		Intermidiate_Code[address][2]=middle_ident;
-		Intermidiate_Code[address][3]="-";
-		Intermidiate_Code[address][4]=middle_ident_new;
-		middle_ident=middle_ident_new;
+		if(symbol_names[temp] == "Plus")
+			Intermidiate_Code[address][1] = "+";
+		else
+			Intermidiate_Code[address][1] = "-";
+	    Intermidiate_Code[address][2] = middle_ident;
+		Intermidiate_Code[address][3] = "-";
+		Intermidiate_Code[address][4] = middle_ident_new;
+		middle_ident = middle_ident_new;
 	}
-	while(token.type==symbol&&(symbol_names[token.symSignal]=="Plus"||symbol_names[token.symSignal]=="Minus"))
+	while (token.type == symbol && (symbol_names[token.symSignal] == "Plus" || symbol_names[token.symSignal] == "Minus"))
 	{
 		string Intermidiate_Code_now[5];
-		
-		if(symbol_names[token.symSignal]=="Plus")
-			Intermidiate_Code_now[1]="+";
+
+		if (symbol_names[token.symSignal] == "Plus")
+			Intermidiate_Code_now[1] = "+";
 		else
-			Intermidiate_Code_now[1]="-";
-		Intermidiate_Code_now[2]=middle_ident;
-		
-		token=getNextToken(ifs);
+			Intermidiate_Code_now[1] = "-";
+		Intermidiate_Code_now[2] = middle_ident;
+
+		token = getNextToken(ifs);
 		TERM();
-		
-		Intermidiate_Code_now[3]=middle_ident;
-			
+
+		Intermidiate_Code_now[3] = middle_ident;
+
 		middle_num++;
-		string middle_ident_new="T"+to_string(middle_num);
-		Intermidiate_Code_now[4]=middle_ident_new;
-		middle_ident=middle_ident_new;
-		
-		Intermidiate_Code[++address][1]=Intermidiate_Code_now[1];
-		Intermidiate_Code[address][2]=Intermidiate_Code_now[2];
-		Intermidiate_Code[address][3]=Intermidiate_Code_now[3];
-		Intermidiate_Code[address][4]=Intermidiate_Code_now[4];
+		string middle_ident_new = "T" + to_string(middle_num);
+		Intermidiate_Code_now[4] = middle_ident_new;
+		middle_ident = middle_ident_new;
+
+		Intermidiate_Code[++address][1] = Intermidiate_Code_now[1];
+		Intermidiate_Code[address][2] = Intermidiate_Code_now[2];
+		Intermidiate_Code[address][3] = Intermidiate_Code_now[3];
+		Intermidiate_Code[address][4] = Intermidiate_Code_now[4];
 	}
 }
 //<项>→<因子> | <因子>[<乘法运算符> <因子>]
 void TERM()
 {
 	FACTOR();
-	//后面的已经在FACTOR读取了，不是加减乘除就是分号
+	token = getNextToken(ifs);
+	//看后面是乘号还是除号
 	while(token.type==symbol&&(symbol_names[token.symSignal]=="times"||symbol_names[token.symSignal]=="slash"))
 	{
 		string Intermidiate_Code_now[5];
@@ -539,6 +553,7 @@ void TERM()
 		
 		token=getNextToken(ifs);
 		FACTOR();
+		token = getNextToken(ifs);
 		
 		Intermidiate_Code_now[3]=middle_ident;
 			
@@ -559,21 +574,21 @@ void FACTOR()
 	if(token.type==ident)
 	{
 		middle_ident=token.value;
-		token=getNextToken(ifs);
+		//token=getNextToken(ifs);
 	}
 	else if(token.type==number)
 	{
 		middle_ident=token.value;
-		token=getNextToken(ifs);
+		//token=getNextToken(ifs);
 	}
 	else if(token.type==symbol&&symbol_names[token.symSignal]=="lparen")
 	{
 		token=getNextToken(ifs);
 		EXP();
-		token=getNextToken(ifs);
+		//token=getNextToken(ifs);
 		if(token.type==symbol&&symbol_names[token.symSignal]!="rparen")
 			ofs<<"Error:expected rparen"<<endl;
-		token=getNextToken(ifs);
+		//token=getNextToken(ifs);
 	}
 }
 //<条件>→<表达式> <关系运算符> <表达式>
@@ -595,6 +610,8 @@ void CEXP()
 			op="<=";
 		if(symbol_names[token.symSignal]=="geq")
 			op=">=";
+		if (symbol_names[token.symSignal] == "neq")
+			op = "<>";
 		token=getNextToken(ifs);
 	}
 	Intermidiate_Code_now[1]="j"+op;
@@ -608,28 +625,21 @@ void CEXP()
 	Intermidiate_Code[address][3]=Intermidiate_Code_now[3];
 	Intermidiate_Code[address][4]=Intermidiate_Code_now[4];
 }
+void ending()
+{
+	address++;
+	Intermidiate_Code[address][1] = "END";
+	Intermidiate_Code[address][2] = "_";
+	Intermidiate_Code[address][3] = "_";
+	Intermidiate_Code[address][4] = "_";
+
+}
 int main()
 {
-	ifs.open("input.txt");
+	ifs.open("input3.txt");
     ofs.open("output.txt");
     PROGRAM();
-    /*
-    Token token;
-    while ((token = getNextToken(ifs)).type != symbol || token.value != ".")
-    {
-        if (token.type == keyword)
-        {
-            ofs << "(" << token.value << ")" << endl;
-        }
-        else if (token.type == symbol) {
-            ofs << "(" << symbol_names[token.symSignal] << ", " << token.value << ")" << endl;
-        }
-        else {
-            ofs << "(" << type_names[token.type] << ", " << token.value << ")" << endl;
-        }
-    }
-    ofs << "(" << symbol_names[token.symSignal] << ", " << token.value << ")" << endl;
-    */
+	ending();
     print_Intermediatecode();
     ifs.close();
     ofs.close();
