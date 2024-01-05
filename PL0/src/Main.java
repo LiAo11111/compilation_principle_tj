@@ -2,10 +2,10 @@
 import antlr.PL0.Quadruple;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import PL0.PL0Parser;
-import PL0.PL0Lexer;
+import antlr.PL0.PL0Parser;
+import antlr.PL0.PL0Lexer;
 import antlr.PL0.PL0VisitorImpl;
-import PL0.PL0BaseVisitor;
+import antlr.PL0.PL0BaseVisitor;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

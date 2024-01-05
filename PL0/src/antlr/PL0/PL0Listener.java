@@ -1,5 +1,5 @@
 // Generated from C:/Users/86188/Desktop/PL0/PL0/src/antlr/PL0.g4 by ANTLR 4.13.1
-package PL0;
+package antlr.PL0;
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 /**
