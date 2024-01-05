@@ -33,7 +33,7 @@ public class Main {
             System.out.println(i+"  ("+quad.toString()+")");
             i++;
         }
-
+        System.out.println(i);
         System.out.println("parser has executed");
 
     }

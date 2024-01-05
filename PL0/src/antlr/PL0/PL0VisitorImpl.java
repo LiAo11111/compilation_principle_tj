@@ -29,7 +29,6 @@ public class PL0VisitorImpl<T> extends PL0.PL0BaseVisitor<T> {
             Quadruple quad = quadruples.get(jumpTargets.get(i));
             quadruples.set(jumpTargets.get(i), new Quadruple(quad.operator, quad.operand1, quad.operand2, destination.get(i)+99+""));
         }
-        addQuadruple("END","_","_","_");
         return quadruples;
     }
 
