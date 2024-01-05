@@ -628,10 +628,7 @@ void CEXP()
 void ending()
 {
 	address++;
-	Intermidiate_Code[address][1] = "END";
-	Intermidiate_Code[address][2] = "_";
-	Intermidiate_Code[address][3] = "_";
-	Intermidiate_Code[address][4] = "_";
+	ofs << address + 99  << endl;
 
 }
 int main()
@@ -639,8 +636,8 @@ int main()
 	ifs.open("input3.txt");
     ofs.open("output.txt");
     PROGRAM();
+	print_Intermediatecode();
 	ending();
-    print_Intermediatecode();
     ifs.close();
     ofs.close();
     return 0;

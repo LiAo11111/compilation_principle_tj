@@ -3,33 +3,34 @@ import PL0.PL0Parser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class PL0VisitorImpl<T> extends PL0.PL0BaseVisitor<T> {
-    private List<Quadruple> quadruples = new ArrayList<>();//四元式链表
-    private List<Integer> jumpTargets = new ArrayList<>();//需要回填四元式地址
-    private List<Integer> destination = new ArrayList<>();//目标回填地址
+    private List<Quadruple> quadruples = new ArrayList<>();
+    private List<Integer> jumpTargets = new ArrayList<>();
+    private List<Integer> destination = new ArrayList<>();
 
     private int getNextQuad() {
         return quadruples.size() + 1;
-    }//获取下一个四元式地址
+    }
 
     private void addQuadruple(String operator, String operand1, String operand2, String result) {
         quadruples.add(new Quadruple(operator, operand1, operand2, result));
-    }//添加四元式
+    }
 
     private void backpatch(int jumpTarget, int targetLine) {
         jumpTargets.add(jumpTarget - 1);
         destination.add(targetLine);
-    }//回填
+    }
 
     public List<Quadruple> getQuadruples() {
         // Backpatch jump targets
         for (int i = 0; i < jumpTargets.size(); i++) {
-            Quadruple quad = quadruples.get(jumpTargets.get(i));//回填
+            Quadruple quad = quadruples.get(jumpTargets.get(i));
             quadruples.set(jumpTargets.get(i), new Quadruple(quad.operator, quad.operand1, quad.operand2, destination.get(i)+99+""));
         }
         return quadruples;
-    }//获取所有四元式并完成回填
+    }
 
     //const_def: id ':=' unsigned_int;
     @Override
@@ -94,9 +95,14 @@ public class PL0VisitorImpl<T> extends PL0.PL0BaseVisitor<T> {
         }
         else {
             String tem_item=(String) visit(ctx.item());
-            if(ctx.getChild(0).getText()=="+"||ctx.getChild(0).getText()=="-"){
+            if(Objects.equals(ctx.getChild(0).getText(), "+")){
                 String tempVariable = generateTemporaryVariable();
-                addQuadruple(ctx.getChild(0).getText(),"+|-",tem_item,tempVariable);
+                addQuadruple("+",tem_item,"_",tempVariable);
+                return (T) tempVariable;
+            }
+            if(Objects.equals(ctx.getChild(0).getText(), "-")){
+                String tempVariable = generateTemporaryVariable();
+                addQuadruple("-",tem_item,"_",tempVariable);
                 return (T) tempVariable;
             }
             return (T) tem_item;

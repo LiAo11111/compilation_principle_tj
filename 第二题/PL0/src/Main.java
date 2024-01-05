@@ -7,22 +7,18 @@ import PL0.PL0Lexer;
 import antlr.PL0.PL0VisitorImpl;
 import PL0.PL0BaseVisitor;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
-
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        String filePath = "F:\\VS文件\\编译原理第一题\\编译原理第一题\\input2.txt";
+        String content = Files.readString(Paths.get(filePath));
+        PL0Lexer lexer = new PL0Lexer(CharStreams.fromString(content));
 
-        PL0Lexer lexer = new PL0Lexer(CharStreams.fromString(
-                "PROGRAM add\n" +
-                        "VAR x,y;\n" +
-                        "BEGIN\n" +
-                        "    x:=1;\n" +
-                        "    y:=2;\n" +
-                        "    WHILE x<5 DO x:=x+1;\n" +
-                        "    IF y>0 THEN y:=y-1;\n" +
-                        "    y:=y+x\n" +
-                        "END"));
         PL0Parser parser = new PL0Parser((new CommonTokenStream(lexer)));
 //        parser.start();
         parser.setBuildParseTree(true);
@@ -37,7 +33,7 @@ public class Main {
             System.out.println(i+"  ("+quad.toString()+")");
             i++;
         }
-
+        System.out.println(i);
         System.out.println("parser has executed");
 
     }
