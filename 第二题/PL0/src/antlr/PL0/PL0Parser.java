@@ -1,10 +1,13 @@
 // Generated from C:/Users/86188/Desktop/PL0/PL0/src/antlr/PL0.g4 by ANTLR 4.13.1
-package PL0;
+package antlr.PL0;
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.misc.*;
 import org.antlr.v4.runtime.tree.*;
 import java.util.List;
+import java.util.Iterator;
+import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast", "CheckReturnValue"})
 public class PL0Parser extends Parser {

@@ -1,11 +1,11 @@
 package antlr.PL0;
-import PL0.PL0Parser;
+import antlr.PL0.PL0Parser;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class PL0VisitorImpl<T> extends PL0.PL0BaseVisitor<T> {
+public class PL0VisitorImpl<T> extends antlr.PL0.PL0BaseVisitor<T> {
     private List<Quadruple> quadruples = new ArrayList<>();
     private List<Integer> jumpTargets = new ArrayList<>();
     private List<Integer> destination = new ArrayList<>();
@@ -67,9 +67,9 @@ public class PL0VisitorImpl<T> extends PL0.PL0BaseVisitor<T> {
         }
         else{
             String tem_expression=(String) visit(ctx.expression());
-            String tempVariable = generateTemporaryVariable();
-            addQuadruple(":=",tem_expression,"_",tempVariable);
-            return (T) tempVariable;
+//            String tempVariable = generateTemporaryVariable();
+//            addQuadruple(":=",tem_expression,"_",tempVariable);
+            return (T) tem_expression;
         }
     }
 

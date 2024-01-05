@@ -34,7 +34,7 @@ word:WORD;
 num:NUMBER;
 
 NUMBER   : [0-9] ;
-WORD    : [a-z];
+WORD    : [a-z]|[A-Z];
 WS : [ \t\r\n]+ -> skip;
 OPERATOR : '+' | '-' | '*' | '/' | ':=' | '=' | '<' | '>' | '<=' | '>=' | '<>' | '(' | ')' | ',' | ';' ;
 KEYWORD  : 'PROGRAM' | 'BEGIN' | 'END' | 'CONST' | 'VAR' | 'WHILE' | 'DO' | 'IF' | 'THEN' ;

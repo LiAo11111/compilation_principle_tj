@@ -119,25 +119,11 @@ Token getNextToken(ifstream& ifs) {
     Token token;
     char c;
 
-    // 跳过空格和注释
+    // 跳过空格
     while (ifs.get(c)) {
         if (isspace(c)) {
             continue;
-        }
-        else if (c == '/') {
-            if (ifs.get(c) && c == '*') {
-                // 跳过注释
-                while (ifs.get(c)) {
-                    if (c == '*' && ifs.get(c) && c == '/') {
-                        break;
-                    }
-                }
-            }
-            else {
-                ifs.putback(c);
-                break;
-            }
-        }
+        }     
         else {
             break;
         }
@@ -633,7 +619,7 @@ void ending()
 }
 int main()
 {
-	ifs.open("input3.txt");
+	ifs.open("input.txt");
     ofs.open("output.txt");
     PROGRAM();
 	print_Intermediatecode();
