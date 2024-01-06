@@ -1,8 +1,11 @@
-PROGRAM PO1
-CONST A:=1,B:=2,C:=3;
-VAR a,b,c;
+PROGRAM add
+CONST j:=1,i:=9;
+VAR x,y,z;
 BEGIN
-a:=4;
-b:=5;
-c:=6+7-5+(A/B)-4*2/(-1+2+(a+b))
+    x:=1+2+3+4+5;
+    y:=2;
+    WHILE x<5 DO x:=x+1;
+    IF y>0 THEN y:=y-1;
+    y:=y+x;
+    y:=+2+3+4+5
 END

@@ -10,6 +10,7 @@ public class PL0VisitorImpl<T> extends antlr.PL0.PL0BaseVisitor<T> {
     private List<Integer> jumpTargets = new ArrayList<>();
     private List<Integer> destination = new ArrayList<>();
 
+    private List<Word> name_list = new ArrayList<>();
     private int getNextQuad() {
         return quadruples.size() + 1;
     }
@@ -32,13 +33,27 @@ public class PL0VisitorImpl<T> extends antlr.PL0.PL0BaseVisitor<T> {
         return quadruples;
     }
 
+    public List<Word> getWord() {
+        return name_list;
+    }
+
     //const_def: id ':=' unsigned_int;
     @Override
     public T visitConst_def(PL0Parser.Const_defContext ctx) {
         addQuadruple(":=",ctx.unsigned_int().getText(),"_",ctx.id().getText());
+        System.out.println(ctx.id().getText()+", "+ctx.unsigned_int().getText()+", CONST");
         return null;
     }
 
+//    var: 'VAR' id(','id)*';';
+    @Override
+    public T visitVar(PL0Parser.VarContext ctx) {
+        int i;
+        for(i=0;ctx.id(i)!=null;i++){
+            name_list.add(new Word(ctx.id(i).getText(),"VAR"));
+        }
+        return null;
+    }
 
     //item:factor|item mul factor;
     @Override
@@ -149,6 +164,8 @@ public class PL0VisitorImpl<T> extends antlr.PL0.PL0BaseVisitor<T> {
     }
 
     private String generateTemporaryVariable() {
+        String tem ="T"+tempVariableCounter;
+        name_list.add(new Word(tem,"TEM"));
         return "T" + tempVariableCounter++;
     }
 

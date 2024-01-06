@@ -8,7 +8,8 @@ using namespace std;
 //存储标识符以及标识符数量
 #define MAX_IDENT 100
 string ident_string[MAX_IDENT+1];
-bool ident_type[MAX_IDENT+1];//标识符是常量还是变量，false为常量
+int ident_type[MAX_IDENT+1];//标识符是常量、变量还是中间变量，0为常量,1为变量，2为中间变量。
+string ident_value[MAX_IDENT + 1];//记录常量的值
 int ident_num=0;
 //查看标识符是否出现过
 bool check_ident(string st)
@@ -18,8 +19,8 @@ bool check_ident(string st)
 			return false;
 	return true;
 }
-//查看标识符是否能进行赋值
-bool check_ident_CorV(string st)
+//查看标识符是否能进行赋值以及判断标识符类型
+int check_ident_CorV(string st)
 {
 	for(int i=1;i<=ident_num;i++)
 		if(st==ident_string[i])
@@ -306,8 +307,11 @@ void CONST()
 		if(!check_ident(token.value))
 			ofs<<"Error:redefinition of ident "<<token.value<<endl;
 		else
-			ident_string[++ident_num]=token.value,ident_type[ident_num]=false;
+		{
+			ident_string[++ident_num] = token.value, ident_type[ident_num] = 0;
 			
+		}
+					
 		//如果接下来是:=  是其它符号，假定读取的一定是符号
 		token=getNextToken(ifs);
 		if(token.type==symbol&&symbol_names[token.symSignal]=="becomes")
@@ -318,6 +322,8 @@ void CONST()
 			Intermidiate_Code[address][2]=token.value;
 			Intermidiate_Code[address][3]="-";
 			Intermidiate_Code[address][4]=ident_now;
+			//将常量记录到表中
+			ident_value[ident_num] = token.value;
 		}
 		//如果是其它符号，都假定为CONST x,y:=1;这种错误，不是分号就直接越过没有赋值的常量进行下个常量读取
 		else
@@ -349,7 +355,7 @@ void VAR()
 		if(!check_ident(token.value))
 			ofs<<"Error:redefinition of ident "<<token.value<<endl;
 		else
-			ident_string[++ident_num]=token.value,ident_type[ident_num]=true;
+			ident_string[++ident_num]=token.value,ident_type[ident_num]=1;
 		token=getNextToken(ifs);
 		if(token.type==symbol)
 		{
@@ -485,6 +491,12 @@ void EXP()
 	{
 		middle_num++;
 		string middle_ident_new = "T" + to_string(middle_num);
+		//加入符号表
+		if (!check_ident(middle_ident_new))
+			ofs << "Error:redefinition " << token.value << endl;
+		else
+			ident_string[++ident_num] = middle_ident_new, ident_type[ident_num] = 2;
+
 		address++;
 		if(symbol_names[temp] == "Plus")
 			Intermidiate_Code[address][1] = "+";
@@ -512,6 +524,12 @@ void EXP()
 
 		middle_num++;
 		string middle_ident_new = "T" + to_string(middle_num);
+		//加入符号表
+		if (!check_ident(middle_ident_new))
+			ofs << "Error:redefinition of ident " << token.value << endl;
+		else
+			ident_string[++ident_num] = middle_ident_new, ident_type[ident_num] = 2;
+
 		Intermidiate_Code_now[4] = middle_ident_new;
 		middle_ident = middle_ident_new;
 
@@ -545,6 +563,12 @@ void TERM()
 			
 		middle_num++;
 		string middle_ident_new="T"+to_string(middle_num);
+		//加入符号表
+		if (!check_ident(middle_ident_new))
+			ofs << "Error:redefinition " << token.value << endl;
+		else
+			ident_string[++ident_num] = middle_ident_new, ident_type[ident_num] = 2;
+
 		Intermidiate_Code_now[4]=middle_ident_new;
 		middle_ident=middle_ident_new;
 		
@@ -617,13 +641,38 @@ void ending()
 	ofs << address + 99  << endl;
 
 }
+void print_symple_table()
+{
+	ofs << "Identifier Array Contents:\n";
+	for (int i = 1; i <= ident_num; i++) {
+		if (ident_type[i] == 0)
+		{
+			ofs << "CONST  " << ident_string[i] <<" " << ident_value[i] << std::endl;
+
+		}
+		else if (ident_type[i] == 1)
+		{
+			ofs << "VAR     " << ident_string[i] << std::endl;
+		}
+		else if (ident_type[i] == 2)
+		{
+			ofs << "MIDVAR " << ident_string[i] << std::endl;
+		}
+		//ofs << "Identifier: " << ident_string[i] << ", Type: " << (ident_type[i] ? "Variable" : "Constant") << std::endl;
+	}
+	ofs << "\n";
+}
 int main()
 {
-	ifs.open("input.txt");
+	ifs.open("input4.txt");
     ofs.open("output.txt");
     PROGRAM();
+	//打印符号表
+	print_symple_table();
+	//打印中间代码
 	print_Intermediatecode();
 	ending();
+	
     ifs.close();
     ofs.close();
     return 0;
